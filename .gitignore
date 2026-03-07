@@ -1,0 +1,5 @@
+.env
+credentials.json
+posted_articles.txt
+venv/
+__pycache--/
