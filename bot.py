@@ -33,10 +33,16 @@ sheet = spreadsheet.get_worksheet(0)
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-# Flux RSS à surveiller
-RSS_FEEDS = [
-    "https://www.lemonde.fr/intelligence-artificielle/rss_full.xml",
-]
+# Flux RSS organisés par jour de la semaine (0=Lundi, 6=Dimanche)
+RSS_FEEDS = {
+    0: ("Le Monde IA", "https://www.lemonde.fr/intelligence-artificielle/rss_full.xml"),
+    1: ("Numerama IA", "https://www.numerama.com/tag/intelligence-artificielle/feed/"),
+    2: ("The Verge AI", "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml"),
+    3: ("VentureBeat AI", "https://venturebeat.com/category/ai/feed/"),
+    4: ("TechCrunch AI", "https://techcrunch.com/category/artificial-intelligence/feed/"),
+    5: ("Le Monde IA", "https://www.lemonde.fr/intelligence-artificielle/rss_full.xml"),
+    6: ("Numerama IA", "https://www.numerama.com/tag/intelligence-artificielle/feed/"),
+}
 
 # ID du canal Discord où poster les articles
 CHANNEL_ID = 1479667999547064330
@@ -80,30 +86,30 @@ def export_to_sheets(title, link, summary, source):
         print(f"Erreur Google Sheets : {e}")
 
 async def fetch_and_post():
-    # Attend que le bot soit connecté à Discord avant de commencer
     await client.wait_until_ready()
     channel = client.get_channel(CHANNEL_ID)
 
-    # Charge les articles déjà postés pour éviter les doublons
+    # Charge les articles déjà postés
     posted_articles = load_posted_articles()
 
-    for feed_url in RSS_FEEDS:
-        # Parse le flux RSS et récupère les 3 derniers articles
-        feed = feedparser.parse(feed_url)
-        for entry in feed.entries[:3]:
-            # Si l'article a déjà été posté, on le skip
-            if entry.link in posted_articles:
-                print(f"Article déjà posté, skip : {entry.title}")
-                continue
-            # Génère le résumé et formate le message Discord
-            summary = get_summary(entry.get("summary", entry.title))
-            message = f"📰 **[{entry.title}]({entry.link})**\n\n{summary}\n\n🔗 Source: {feed.feed.title}"
-            # Poste le message sur Discord et exporte vers Google Sheets
-            await channel.send(message)
-            export_to_sheets(entry.title, entry.link, summary, feed.feed.title)
-            save_posted_article(entry.link)
-            # Pause de 4 secondes pour respecter le quota de l'API Gemini
-            await asyncio.sleep(4)
+    # Sélectionne la source du jour
+    day = datetime.now().weekday()
+    source_name, feed_url = RSS_FEEDS[day]
+    print(f"Source du jour ({day}) : {source_name}")
+
+    feed = feedparser.parse(feed_url)
+    for entry in feed.entries[:3]:
+        if entry.link in posted_articles:
+            print(f"Article déjà posté, skip : {entry.title}")
+            continue
+        # Ajoute immédiatement au set en mémoire pour éviter les doublons
+        posted_articles.add(entry.link)
+        summary = get_summary(entry.get("summary", entry.title))
+        message = f"📰 **[{entry.title}]({entry.link})**\n\n{summary}\n\n🔗 Source: {source_name}"
+        await channel.send(message)
+        export_to_sheets(entry.title, entry.link, summary, source_name)
+        save_posted_article(entry.link)
+        await asyncio.sleep(15)
 
 @client.event
 async def on_ready():
