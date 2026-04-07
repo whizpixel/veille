@@ -141,8 +141,8 @@
           <div class="flow-line"></div>
           <div class="w-10 h-10 min-w-[40px] rounded-full bg-azure-500 text-white font-display font-bold text-sm flex items-center justify-center z-10">1</div>
           <div class="pb-8 pt-1">
-            <strong class="font-display font-semibold text-sm block mb-1">Récupération des flux RSS</strong>
-            <p class="text-ink-500 text-sm font-light leading-relaxed m-0">Le bot lit les flux RSS configurés et récupère les derniers articles. Les articles déjà traités sont ignorés grâce à un système anti-doublons.</p>
+            <strong class="font-display font-semibold text-sm block mb-1">Sélection de la source du jour</strong>
+            <p class="text-ink-500 text-sm font-light leading-relaxed m-0">Chaque jour de la semaine est associé à une source différente. Le bot sélectionne automatiquement la source correspondante au jour en cours.</p>
           </div>
         </div>
         <div class="flow-step relative flex gap-5 items-start">
@@ -171,6 +171,28 @@
       </div>
 
       <hr class="border-sand-200 my-10"/>
+
+      <h3 class="font-display font-semibold text-lg mb-3">Planification des sources</h3>
+      <p class="text-ink-700 font-light mb-5 leading-relaxed">Chaque jour de la semaine est associé à une source différente pour éviter de saturer le quota de l'API Gemini et diversifier les actualités.</p>
+      <div class="bg-white border border-sand-200 rounded-2xl overflow-hidden mb-10">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-sand-100 border-b border-sand-200">
+              <th class="text-left py-3 px-5 font-display text-xs font-semibold uppercase tracking-wider text-ink-500">Jour</th>
+              <th class="text-left py-3 px-5 font-display text-xs font-semibold uppercase tracking-wider text-ink-500">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-sand-200 hover:bg-sand-50"><td class="py-3 px-5 font-medium">Lundi</td><td class="py-3 px-5 text-ink-700 font-light">Le Monde IA</td></tr>
+            <tr class="border-b border-sand-200 hover:bg-sand-50"><td class="py-3 px-5 font-medium">Mardi</td><td class="py-3 px-5 text-ink-700 font-light">Numerama IA</td></tr>
+            <tr class="border-b border-sand-200 hover:bg-sand-50"><td class="py-3 px-5 font-medium">Mercredi</td><td class="py-3 px-5 text-ink-700 font-light">The Verge AI</td></tr>
+            <tr class="border-b border-sand-200 hover:bg-sand-50"><td class="py-3 px-5 font-medium">Jeudi</td><td class="py-3 px-5 text-ink-700 font-light">VentureBeat AI</td></tr>
+            <tr class="border-b border-sand-200 hover:bg-sand-50"><td class="py-3 px-5 font-medium">Vendredi</td><td class="py-3 px-5 text-ink-700 font-light">TechCrunch AI</td></tr>
+            <tr class="border-b border-sand-200 hover:bg-sand-50"><td class="py-3 px-5 font-medium">Samedi</td><td class="py-3 px-5 text-ink-700 font-light">Le Monde IA</td></tr>
+            <tr class="hover:bg-sand-50"><td class="py-3 px-5 font-medium">Dimanche</td><td class="py-3 px-5 text-ink-700 font-light">Numerama IA</td></tr>
+          </tbody>
+        </table>
+      </div>
 
       <h3 class="font-display font-semibold text-lg mb-3">Architecture technique</h3>
       <p class="text-ink-700 font-light mb-5 leading-relaxed">Le bot est hébergé sur un mini PC sous Ubuntu Server, connecté en permanence à internet. Il fonctionne en tant que service systemd, ce qui lui permet de démarrer automatiquement au reboot.</p>
@@ -210,14 +232,20 @@
         🔗 Source : Nom du site
       </div>
 
-      <h3 class="font-display font-semibold text-lg mb-3 mt-8">Ajouter un flux RSS</h3>
-      <p class="text-ink-700 font-light mb-3 leading-relaxed">Pour ajouter une nouvelle source, modifie la liste <code class="bg-sand-100 border border-sand-200 text-ember px-1.5 py-0.5 rounded text-xs">RSS_FEEDS</code> dans <code class="bg-sand-100 border border-sand-200 text-ember px-1.5 py-0.5 rounded text-xs">bot.py</code> :</p>
+      <h3 class="font-display font-semibold text-lg mb-3 mt-8">Ajouter ou modifier une source RSS</h3>
+      <p class="text-ink-700 font-light mb-3 leading-relaxed">Les sources sont organisées par jour de la semaine dans le dictionnaire <code class="bg-sand-100 border border-sand-200 text-ember px-1.5 py-0.5 rounded text-xs">RSS_FEEDS</code> dans <code class="bg-sand-100 border border-sand-200 text-ember px-1.5 py-0.5 rounded text-xs">bot.py</code> :</p>
       <div class="bg-gray-900 rounded-2xl p-5 mb-3 overflow-x-auto">
         <div class="text-gray-500 text-xs font-mono uppercase tracking-wider mb-3">bot.py</div>
-        <pre class="text-gray-300 text-sm leading-relaxed font-mono">RSS_FEEDS = [
-    "https://www.lemonde.fr/intelligence-artificielle/rss_full.xml",
-    "https://nouvelle-source.com/rss.xml",  <span class="text-green-400"># Ajouter ici</span>
-]</pre>
+        <pre class="text-gray-300 text-sm leading-relaxed font-mono"><span class="text-green-400"># 0=Lundi, 1=Mardi, ..., 6=Dimanche</span>
+RSS_FEEDS = {
+    0: ("Le Monde IA", "https://www.lemonde.fr/intelligence-artificielle/rss_full.xml"),
+    1: ("Numerama IA", "https://www.numerama.com/tag/intelligence-artificielle/feed/"),
+    2: ("The Verge AI", "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml"),
+    3: ("VentureBeat AI", "https://venturebeat.com/category/ai/feed/"),
+    4: ("TechCrunch AI", "https://techcrunch.com/category/artificial-intelligence/feed/"),
+    5: ("Le Monde IA", "https://www.lemonde.fr/intelligence-artificielle/rss_full.xml"),
+    6: ("Numerama IA", "https://www.numerama.com/tag/intelligence-artificielle/feed/"),
+}</pre>
       </div>
       <div class="bg-orange-50 border border-orange-200 text-orange-800 rounded-xl p-4 text-sm mb-6">
         ⚠️ Après modification, redémarre le service : <code class="bg-orange-100 px-1.5 py-0.5 rounded text-xs font-mono">sudo systemctl restart discord-bot</code>
@@ -254,11 +282,15 @@ sudo journalctl -u discord-bot -f</pre>
         </div>
         <div class="bg-white border border-sand-200 rounded-2xl p-6 hover:border-azure-500 transition-colors">
           <h3 class="font-display font-semibold text-base mb-2">Le bot peut-il poster deux fois le même article ?</h3>
-          <p class="text-ink-500 text-sm font-light leading-relaxed m-0">Non. Le bot conserve un fichier <code class="bg-sand-100 border border-sand-200 text-ember px-1.5 py-0.5 rounded text-xs">posted_articles.txt</code> contenant les liens déjà traités. Un article déjà posté sera ignoré lors des prochaines exécutions.</p>
+          <p class="text-ink-500 text-sm font-light leading-relaxed m-0">Non. Le bot utilise un double système anti-doublons : un fichier <code class="bg-sand-100 border border-sand-200 text-ember px-1.5 py-0.5 rounded text-xs">posted_articles.txt</code> persistant sur le disque, et un set en mémoire mis à jour immédiatement pendant l'exécution pour éviter tout doublon en temps réel.</p>
         </div>
         <div class="bg-white border border-sand-200 rounded-2xl p-6 hover:border-azure-500 transition-colors">
           <h3 class="font-display font-semibold text-base mb-2">À quelle fréquence le bot s'exécute-t-il ?</h3>
-          <p class="text-ink-500 text-sm font-light leading-relaxed m-0">Le bot s'exécute une fois par jour à <strong>7h00</strong>, heure locale du serveur.</p>
+          <p class="text-ink-500 text-sm font-light leading-relaxed m-0">Le bot s'exécute une fois par jour à <strong>7h00</strong>, heure locale du serveur. Chaque jour utilise une source différente pour diversifier les actualités.</p>
+        </div>
+        <div class="bg-white border border-sand-200 rounded-2xl p-6 hover:border-azure-500 transition-colors">
+          <h3 class="font-display font-semibold text-base mb-2">Pourquoi une seule source par jour ?</h3>
+          <p class="text-ink-500 text-sm font-light leading-relaxed m-0">L'API Google Gemini gratuite est limitée à 20 requêtes par jour. En traitant une seule source de 3 articles par jour, on reste largement dans les limites du quota gratuit tout en diversifiant les sources sur la semaine.</p>
         </div>
         <div class="bg-white border border-sand-200 rounded-2xl p-6 hover:border-azure-500 transition-colors">
           <h3 class="font-display font-semibold text-base mb-2">Comment accéder au serveur ?</h3>
